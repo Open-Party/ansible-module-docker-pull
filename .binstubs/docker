@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e
+
+cmd=$1
+shift
+
+case "$cmd" in
+    pull)
+        echo "---> not really docker pull $@"
+        exit 0
+    ;;
+    images)
+        echo "---> not really docker images $RANDOM"
+        exit 0
+    ;;
+    *)
+        echo NOPE
+        exit 1
+    ;;
+esac
