@@ -30,6 +30,7 @@ options:
   keep_images:
     description:
       - Number of images to keep
+      - To keep all images, provide the value "-1", and image removal will not occur.
     required: false
     default: 3
 """
@@ -175,7 +176,8 @@ def main():
     if module.check_mode:
         module.exit_json(changed=False)
 
-    puller.remove_old_images()
+    if module.params['keep_images'] != "-1":
+        puller.remove_old_images()
     (rc, out, err), changed = puller.pull_repo()
 
     if rc is None:
