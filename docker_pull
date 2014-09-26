@@ -29,17 +29,25 @@ options:
     default: null
   keep_images:
     description:
-      - Number of images to keep
-      - To keep all images, provide the value "-1", and image removal will not occur.
+      - Keep the first N images based on chronological order, and remove any
+        older images. By default, this is not enable.
+      - Removal of images occurs before the desired image is pulled.
     required: false
-    default: 3
+    default: -1
 """
 
 EXAMPLES = """
-# Pull a particular redis image
+# Pull a particular redis image.
 - docker_pull:
     repo: "redis"
     tag:  "2.8.13"
+
+# Keep only the 3 newest images of this repo and remove all older images,
+# in addition to pulling the particular redis image.
+- docker_pull:
+    repo:         "redis"
+    tag:          "2.8.13"
+    keep_images:  3
 """
 
 from hashlib import md5
@@ -161,7 +169,7 @@ def main():
             state=dict(default='present', choices=['present']),
             repo=dict(required=True),
             tag=dict(default='', required=False),
-            keep_images=dict(default='3', required=False),
+            keep_images=dict(default='-1', required=False),
         ),
         supports_check_mode=True
     )
