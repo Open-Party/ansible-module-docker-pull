@@ -9,6 +9,8 @@ EXAMPLES = """
 """
 
 from hashlib import md5
+from re import split, search
+from collections import OrderedDict
 
 
 class DockerPuller(object):
@@ -17,6 +19,7 @@ class DockerPuller(object):
         self.module = module
         self.repo = module.params['repo']
         self.tag = module.params['tag']
+        self.keep_images = int(module.params['keep_images'])
 
     def pull_repo(self, docker='docker'):
         checksum = self._get_images_checksum(docker)
@@ -52,6 +55,56 @@ class DockerPuller(object):
 
         return _md5sum(out.strip())
 
+    def remove_old_images(self, docker='docker'):
+        old_images = self._get_old_images(docker)
+        if old_images:
+            # Appending the list of images to be deleted to cmd because
+            # each of the images is a parameter to the docker rmi command.
+            cmd = [self._docker(docker), 'rmi'] + old_images
+
+            rc, out, err = self._run(cmd)
+
+            if rc is not None and rc != 0:
+                self._fail(err, rc)
+
+            if out.strip().startswith('Usage:'):
+                self._fail(
+                    ('Got usage output for cmd=%r:\n' % (cmd,)) + out + err, rc
+                )
+
+    def _get_old_images(self, docker='docker'):
+        cmd = [self._docker(docker), 'images']
+        rc, out, err = self._run(cmd)
+
+        if rc is not None and rc != 0:
+            self._fail(err, rc)
+
+        if out.strip().startswith('Usage:'):
+            self._fail(
+                ('Got usage output for cmd=%r:\n' % (cmd,)) + out + err, rc
+            )
+
+        # From the output of 'docker images':
+        #   Obtain the lines that contain the repo that will be pulled.
+        #   From those lines, obtain the image ids.
+        #   From this set of image ids, remove any repeated ids.
+        #
+        #   If there are more unique image ids than the 'keep_images' limit,
+        #   remove the first N images from unique_image_ids, where N is
+        #   'keep_images', and return the resultant set.
+
+        lines = split('\n', out)
+        lines = [ split('\s\s+', line) for line in lines if search(self.repo, line) ]
+
+        # docker images columns:
+        #     repo, tag, image_id, created, size
+        image_ids = [ line[2] for line in lines ]
+        unique_image_ids = OrderedDict.fromkeys(image_ids).keys()
+        if len(unique_image_ids) > self.keep_images:
+            for i in range(self.keep_images):
+                unique_image_ids.pop(0)
+            return unique_image_ids
+
     def _run(self, cmd):
         return self.module.run_command(cmd)
 
@@ -74,6 +127,7 @@ def main():
             state=dict(default='present', choices=['present']),
             repo=dict(required=True),
             tag=dict(default='', required=False),
+            keep_images=dict(default='3', required=False),
         ),
         supports_check_mode=True
     )
@@ -88,6 +142,7 @@ def main():
     if module.check_mode:
         module.exit_json(changed=False)
 
+    puller.remove_old_images()
     (rc, out, err), changed = puller.pull_repo()
 
     if rc is None:
