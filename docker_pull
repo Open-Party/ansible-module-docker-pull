@@ -3,9 +3,42 @@
 
 DOCUMENTATION = """
 ---
+module: docker_pull
+short_description: Pulls docker images
+description:
+  - Pulls specific docker images onto hosts, and deletes old versions of images.
+version_added: "0.1"
+author: ModCloth Labs
+options:
+  state:
+    description:
+      - Does nothing, defaults to present, no other options.
+    required: false
+    default: present
+  repo:
+    description:
+      - The repo to be pulled on to a host.
+      - Specify a 'tag' if all of the images for this repo should not be
+        pulled.
+    required: true
+    default: null
+  tag:
+    description:
+      - Image tag, use this if you want to pull only a single image.
+    required: false
+    default: null
+  keep_images:
+    description:
+      - Number of images to keep
+    required: false
+    default: 3
 """
 
 EXAMPLES = """
+# Pull a particular redis image
+- docker_pull:
+    repo: "redis"
+    tag:  "2.8.13"
 """
 
 from hashlib import md5
