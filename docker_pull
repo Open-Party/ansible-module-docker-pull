@@ -128,6 +128,30 @@ class DockerPuller(object):
 
         return _image_ids_for_removal(out)
 
+
+    def _image_ids_for_removal(self, input_text):
+        # From the output of 'docker images':
+        #   Obtain the lines that contain the repo that will be pulled.
+        #   From those lines, obtain the image ids.
+        #   From this set of image ids, remove any repeated ids.
+        #
+        #   If there are more unique image ids than the 'keep_images' limit,
+        #   remove the first N images from unique_image_ids, where N is
+        #   'keep_images', and return the resultant set.
+
+        lines = split('\n', input_text)
+        lines = [ split('\s\s+', line) for line in lines ]
+        # docker images columns:
+        #     repo, tag, image_id, created, size
+        lines = [ line for line in lines if self.repo == line[0] ]
+        image_ids = [ line[2] for line in lines ]
+        unique_image_ids = OrderedDict.fromkeys(image_ids).keys()
+
+        if len(unique_image_ids) > self.keep_images:
+            for i in range(self.keep_images):
+                unique_image_ids.pop(0)
+            return unique_image_ids
+
     def _run(self, cmd):
         return self.module.run_command(cmd)
 
@@ -139,31 +163,6 @@ class DockerPuller(object):
             repo=self.repo, tag=self.tag, msg=err, rc=rc
         )
 
-
-# This is a standalone function instead of a method because testing it
-# otherwise requires dealing with AnsibleModule magic. (Nope.)
-def _image_ids_for_removal(self, input_text):
-    # From the output of 'docker images':
-    #   Obtain the lines that contain the repo that will be pulled.
-    #   From those lines, obtain the image ids.
-    #   From this set of image ids, remove any repeated ids.
-    #
-    #   If there are more unique image ids than the 'keep_images' limit,
-    #   remove the first N images from unique_image_ids, where N is
-    #   'keep_images', and return the resultant set.
-
-    lines = split('\n', input_text)
-    lines = [ split('\s\s+', line) for line in lines ]
-    # docker images columns:
-    #     repo, tag, image_id, created, size
-    lines = [ line for line in lines if self.repo == line[0] ]
-    image_ids = [ line[2] for line in lines ]
-    unique_image_ids = OrderedDict.fromkeys(image_ids).keys()
-
-    if len(unique_image_ids) > self.keep_images:
-        for i in range(self.keep_images):
-            unique_image_ids.pop(0)
-        return unique_image_ids
 
 def _md5sum(string):
     return md5(string).hexdigest()
@@ -209,4 +208,5 @@ def main():
 
 # include magic from lib/ansible/module_common.py
 #<<INCLUDE_ANSIBLE_MODULE_COMMON>>
-main()
+if __name__ == '__main__':
+        main()
