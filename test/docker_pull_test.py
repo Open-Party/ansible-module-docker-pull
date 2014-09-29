@@ -7,6 +7,7 @@ imp.load_source('docker_pull', os.path.join(os.path.dirname(__file__), os.path.p
 
 from docker_pull import DockerPuller
 
+# redis and tutum/redis pulled 9/28/14
 docker_images = """REPOSITORY                        TAG                 IMAGE ID            CREATED             VIRTUAL SIZE
 redis                             2.8.9               e27d80fba3dd        41 hours ago        98.74 MB
 redis                             2.8.8               1a6a6bbf388d        41 hours ago        98.66 MB
@@ -30,8 +31,8 @@ class TestSequenceFunctions(unittest.TestCase):
 
     def test_redis_pass(self):
         # The official Redis image is curious, when pulled, the images that
-        # have seemingly been built first are the older images (2.8.[9-6]).
-        # The latest image, 2.8 / 2.8.13 comes after all of those.
+        # have seemingly been built most recently are the older images
+        # (2.8.[9-6]). The latest image, 2.8 / 2.8.13 comes after all of those.
         #
         # This test also ensures that 'tutum/redis' images is not deleted.
         module = FakeAnsibleModule()
