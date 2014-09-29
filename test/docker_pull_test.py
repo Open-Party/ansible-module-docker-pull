@@ -27,7 +27,7 @@ class FakeAnsibleModule(object):
     check_mode = False
     params = {}
  
-class TestSequenceFunctions(unittest.TestCase):
+class TestImagesIdsForRemoval(unittest.TestCase):
 
     def test_redis_pass(self):
         # The official Redis image is curious, when pulled, the images that
