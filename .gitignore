@@ -1,3 +1,6 @@
-/ansible
 /.ansiblereqs
+/.cache
+/.coverage
+/.pyreqs
+/ansible
 /docker_pullc
