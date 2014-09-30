@@ -8,7 +8,7 @@ short_description: Pulls docker images
 description:
   - Pulls specific docker images onto hosts, and deletes old versions of images.
 version_added: "0.1"
-author: ModCloth Labs
+author: Dan Buch & contributors
 options:
   state:
     description:
