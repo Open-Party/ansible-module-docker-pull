@@ -6,5 +6,13 @@ set -e
 source ansible/hacking/env-setup
 export PATH="$PWD/.binstubs:$PATH"
 
-ansible/hacking/test-module -m ./docker_pull -a 'repo=foo/bar tag=latest'
-python test/docker_pull_test.py
+ansible/hacking/test-module \
+    -m ./docker_pull.py \
+    -a 'repo=foo/bar tag=latest'
+
+exec py.test \
+    --cov docker_pull \
+    --cov-report term-missing \
+    --pep8 \
+    -rs \
+    ./tests
