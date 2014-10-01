@@ -5,7 +5,14 @@ from codecs import open
 
 import pytest
 
-from docker_pull import DockerPuller
+from docker_pull import DockerPuller, main
+
+
+def setup():
+    os.environ['PATH'] = ':'.join([
+        os.path.join(here(), '..', '.binstubs'),
+        os.environ['PATH']
+    ])
 
 
 @pytest.fixture
@@ -21,7 +28,55 @@ def docker_images_text(here):
 
 class FakeAnsibleModule(object):
     check_mode = False
-    params = {}
+
+    def __init__(self, argument_spec=tuple(), supports_check_mode=False):
+        self.argument_spec = argument_spec
+        self.supports_check_mode = supports_check_mode
+        self.params = {}
+        self.known_commands = {}
+        self.last_exit_json_kwargs = {}
+        self.last_fail_json_kwargs = {}
+
+    def fakeinit(self, argument_spec, supports_check_mode):
+        self.argument_spec = argument_spec
+        self.supports_check_mode = supports_check_mode
+        return self
+
+    def get_bin_path(self, exe, wat):
+        return exe
+
+    def run_command(self, cmd):
+        self.last_cmd = cmd
+        return self.known_commands.get(tuple(cmd), (0, '', ''))
+
+    def exit_json(self, **kwargs):
+        self.last_exit_json_kwargs = kwargs
+
+    def fail_json(self, **kwargs):
+        self.last_fail_json_kwargs = kwargs
+
+
+def test_main(docker_images_text):
+    module = FakeAnsibleModule()
+    module.params.update({
+        'repo': 'redis',
+        'tag': 'latest',
+        'keep_images': '2',
+    })
+    module.known_commands[('docker', 'images', '-q')] = (
+        0, docker_images_text, ''
+    )
+    module.known_commands[('docker', 'images')] = (
+        0, docker_images_text, ''
+    )
+
+    main(module.fakeinit)
+
+    module.known_commands[('docker', 'images', '-q')] = (
+        0, 'Usage:', ''
+    )
+
+    main(module.fakeinit)
 
 
 def test_redis_pass(docker_images_text):
@@ -33,9 +88,11 @@ def test_redis_pass(docker_images_text):
     This test also ensures that 'tutum/redis' images is not deleted.
     """
     module = FakeAnsibleModule()
-    module.params['repo'] = 'redis'
-    module.params['tag'] = 'latest'
-    module.params['keep_images'] = '3'
+    module.params.update({
+        'repo': 'redis',
+        'tag': 'latest',
+        'keep_images': '3',
+    })
 
     puller = DockerPuller(module)
 
@@ -59,9 +116,11 @@ def test_redis_fail(docker_images_text):
     deleted.
     """
     module = FakeAnsibleModule()
-    module.params['repo'] = 'redis'
-    module.params['tag'] = 'latest'
-    module.params['keep_images'] = '3'
+    module.params.update({
+        'repo': 'redis',
+        'tag': 'latest',
+        'keep_images': '3',
+    })
 
     puller = DockerPuller(module)
 
@@ -81,9 +140,11 @@ def test_tutum_pass(docker_images_text):
     should return None.
     """
     module = FakeAnsibleModule()
-    module.params['repo'] = 'tutum/redis'
-    module.params['tag'] = 'latest'
-    module.params['keep_images'] = '3'
+    module.params.update({
+        'repo': 'tutum/redis',
+        'tag': 'latest',
+        'keep_images': '3',
+    })
 
     puller = DockerPuller(module)
 
