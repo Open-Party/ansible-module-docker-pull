@@ -171,8 +171,11 @@ def _md5sum(string):
     return md5(string).hexdigest()
 
 
-def main():
-    module = AnsibleModule(
+def main(module_class=None):
+    if module_class is None:
+        module_class = AnsibleModule
+
+    module = module_class(
         argument_spec=dict(
             state=dict(default='present', choices=['present']),
             repo=dict(required=True),
@@ -192,7 +195,7 @@ def main():
     if module.check_mode:
         module.exit_json(changed=False)
 
-    if module.params['keep_images'] != "-1":
+    if module.params['keep_images'] != '-1':
         puller.remove_old_images()
     (rc, out, err), changed = puller.pull_repo()
 

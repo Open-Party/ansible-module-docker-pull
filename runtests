@@ -8,7 +8,7 @@ export PATH="$PWD/.binstubs:$PATH"
 
 ansible/hacking/test-module \
     -m ./docker_pull.py \
-    -a 'repo=foo/bar tag=latest'
+    -a 'repo=foo/bar tag=latest keep_images=-1'
 
 exec py.test \
     --cov docker_pull \
