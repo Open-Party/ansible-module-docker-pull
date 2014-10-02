@@ -184,16 +184,17 @@ class DockerPuller(object):
         # docker ps columns:
         #     container id, image, command, created, status, ports, names
         image_ids = [self._get_container_image_id(line[0]) for line in lines
-                if len(line) == 7]
+                     if len(line) == 7]
         return OrderedDict.fromkeys(image_ids).keys()
 
-    def _get_container_image_id(self, container_id):
+    def _get_container_image_id(self, container_id, docker='docker'):
         """
-        Returns the image id of a given container id, shortened to 12 characters.
+        Returns the image id of a given container id, shortened to 12
+        characters.
         """
 
-        docker='docker'
-        cmd = [self._docker(docker), 'inspect', '-f', '{{.Image}}', container_id]
+        cmd = [self._docker(docker), 'inspect', '-f', '{{.Image}}',
+               container_id]
         rc, out, err = self._run(cmd)
 
         if rc is not None and rc != 0:
