@@ -151,14 +151,20 @@ class DockerPuller(object):
         lines = [line for line in lines if self.repo == line[0]]
         image_ids = [line[2] for line in lines]
         unique_image_ids = OrderedDict.fromkeys(image_ids).keys()
+        ordered_unique_image_ids = list(enumerate(unique_image_ids))
 
         running_images = self._get_running_images()
-        unique_image_ids = list(set(unique_image_ids) - set(running_images))
+        running_unique_image_ids = list(set(unique_image_ids) - set(running_images))
 
-        if len(unique_image_ids) > self.keep_images:
+        reordered_uniques = []
+        for _, image_id in ordered_unique_image_ids:
+            if image_id in running_unique_image_ids:
+                reordered_uniques.append(image_id)
+
+        if len(reordered_uniques) > self.keep_images:
             for i in range(self.keep_images):
-                unique_image_ids.pop(0)
-            return unique_image_ids
+                reordered_uniques.pop(0)
+            return reordered_uniques
 
     def _get_running_images(self, docker='docker'):
         """
