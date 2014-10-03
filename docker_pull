@@ -154,7 +154,9 @@ class DockerPuller(object):
         ordered_unique_image_ids = list(enumerate(unique_image_ids))
 
         running_images = self._get_running_images()
-        running_unique_image_ids = list(set(unique_image_ids) - set(running_images))
+        running_unique_image_ids = list(
+            set(unique_image_ids) - set(running_images)
+        )
 
         reordered_uniques = []
         for _, image_id in ordered_unique_image_ids:
