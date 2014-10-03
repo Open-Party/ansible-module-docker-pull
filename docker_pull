@@ -101,36 +101,15 @@ class DockerPuller(object):
 
         return _md5sum(out.strip())
 
-    def remove_old_images(self, docker='docker'):
-        old_images = self._get_old_images(docker)
+    def remove_old_images(self):
+        images = self._exec_docker(['images'])
+        old_images = self._image_ids_for_removal(images)
+
         if old_images:
             # Appending the list of images to be deleted to cmd because
             # each of the images is a parameter to the docker rmi command.
-            cmd = [self._docker(docker), 'rmi'] + old_images
-
-            rc, out, err = self._run(cmd)
-
-            if rc is not None and rc != 0:
-                self._fail(err, rc)
-
-            if out.strip().startswith('Usage:'):
-                self._fail(
-                    ('Got usage output for cmd=%r:\n' % (cmd,)) + out + err, rc
-                )
-
-    def _get_old_images(self, docker='docker'):
-        cmd = [self._docker(docker), 'images']
-        rc, out, err = self._run(cmd)
-
-        if rc is not None and rc != 0:
-            self._fail(err, rc)
-
-        if out.strip().startswith('Usage:'):
-            self._fail(
-                ('Got usage output for cmd=%r:\n' % (cmd,)) + out + err, rc
-            )
-
-        return self._image_ids_for_removal(out)
+            args = ['rmi'] + old_images
+            self._exec_docker(args)
 
     def _image_ids_for_removal(self, input_text):
         """
@@ -163,23 +142,13 @@ class DockerPuller(object):
                 removable_image_ids.pop(0)
             return removable_image_ids
 
-    def _get_container_image_ids(self, docker='docker'):
+    def _get_container_image_ids(self):
         """
         Return the image ids for running and stopped containers.
         """
 
-        cmd = [self._docker(docker), 'ps', '-a']
-        rc, out, err = self._run(cmd)
-
-        if rc is not None and rc != 0:
-            self._fail(err, rc)
-
-        if out.strip().startswith('Usage:'):
-            self._fail(
-                ('Got usage output for cmd=%r:\n' % (cmd,)) + out + err, rc
-            )
-
-        lines = re.split('\n', out)
+        lines = self._exec_docker(['ps', '-a'])
+        lines = re.split('\n', lines)
         # Removing the header line.
         lines = lines[1:]
         lines = [line.strip() for line in lines]
@@ -190,14 +159,25 @@ class DockerPuller(object):
                      if len(line) == 7]
         return OrderedDict.fromkeys(image_ids).keys()
 
-    def _get_container_image_id(self, container_id, docker='docker'):
+    def _get_container_image_id(self, container_id):
         """
         Returns the image id of a given container id, shortened to 12
         characters.
         """
 
-        cmd = [self._docker(docker), 'inspect', '-f', '{{.Image}}',
-               container_id]
+        image_id = self._exec_docker(
+            ['inspect', '-f', '{{.Image}}', container_id]
+        )
+
+        return image_id[0:12]
+
+    def _exec_docker(self, args, docker='docker'):
+        """
+        Execute a docker command with the arguments provided as a list,
+        returning the output if the command succeeds.
+        """
+
+        cmd = [self._docker(docker)] + args
         rc, out, err = self._run(cmd)
 
         if rc is not None and rc != 0:
@@ -208,7 +188,7 @@ class DockerPuller(object):
                 ('Got usage output for cmd=%r:\n' % (cmd,)) + out + err, rc
             )
 
-        return out[0:12]
+        return out
 
     def _run(self, cmd):
         return self.module.run_command(cmd)
