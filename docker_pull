@@ -33,6 +33,8 @@ options:
       - Keep the first N images based on chronological order, and remove any
         older images. By default, this is not enable.
       - Removal of images occurs before the desired image is pulled.
+      - If any of the images that should be removed are running containers,
+        they will be skipped for removal.
     required: false
     default: -1
 """
@@ -149,11 +151,69 @@ class DockerPuller(object):
         lines = [line for line in lines if self.repo == line[0]]
         image_ids = [line[2] for line in lines]
         unique_image_ids = OrderedDict.fromkeys(image_ids).keys()
+        ordered_unique_image_ids = list(enumerate(unique_image_ids))
 
-        if len(unique_image_ids) > self.keep_images:
+        running_images = self._get_running_images()
+        running_unique_image_ids = list(
+            set(unique_image_ids) - set(running_images)
+        )
+
+        reordered_uniques = []
+        for _, image_id in ordered_unique_image_ids:
+            if image_id in running_unique_image_ids:
+                reordered_uniques.append(image_id)
+
+        if len(reordered_uniques) > self.keep_images:
             for i in range(self.keep_images):
-                unique_image_ids.pop(0)
-            return unique_image_ids
+                reordered_uniques.pop(0)
+            return reordered_uniques
+
+    def _get_running_images(self, docker='docker'):
+        """
+        Return the image ids for currently running images.
+        """
+
+        cmd = [self._docker(docker), 'ps']
+        rc, out, err = self._run(cmd)
+
+        if rc is not None and rc != 0:
+            self._fail(err, rc)
+
+        if out.strip().startswith('Usage:'):
+            self._fail(
+                ('Got usage output for cmd=%r:\n' % (cmd,)) + out + err, rc
+            )
+
+        lines = re.split('\n', out)
+        # Removing the header line.
+        lines = lines[1:]
+        lines = [line.strip() for line in lines]
+        lines = [re.split('\s\s+', line) for line in lines]
+        # docker ps columns:
+        #     container id, image, command, created, status, ports, names
+        image_ids = [self._get_container_image_id(line[0]) for line in lines
+                     if len(line) == 7]
+        return OrderedDict.fromkeys(image_ids).keys()
+
+    def _get_container_image_id(self, container_id, docker='docker'):
+        """
+        Returns the image id of a given container id, shortened to 12
+        characters.
+        """
+
+        cmd = [self._docker(docker), 'inspect', '-f', '{{.Image}}',
+               container_id]
+        rc, out, err = self._run(cmd)
+
+        if rc is not None and rc != 0:
+            self._fail(err, rc)
+
+        if out.strip().startswith('Usage:'):
+            self._fail(
+                ('Got usage output for cmd=%r:\n' % (cmd,)) + out + err, rc
+            )
+
+        return out[0:12]
 
     def _run(self, cmd):
         return self.module.run_command(cmd)

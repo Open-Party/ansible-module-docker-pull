@@ -102,7 +102,7 @@ def test_redis_pass(docker_images_text):
         '4734b2f47317', '8c6a9dd0192a', 'e65fe09e1cd2'
     ]
     assert test == expected
-    assert '214f80f63b0f' not in expected
+    assert '214f80f63b0f' not in test
 
 
 def test_redis_fail(docker_images_text):
@@ -130,7 +130,7 @@ def test_redis_fail(docker_images_text):
         '67b039bb2a0b', '90edc76cff8c', '8c6a9dd0192a', 'e65fe09e1cd2'
     ]
     assert test != expected
-    assert '214f80f63b0f' not in expected
+    assert '214f80f63b0f' not in test
 
 
 def test_tutum_pass(docker_images_text):
