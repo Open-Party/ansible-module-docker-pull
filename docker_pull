@@ -138,6 +138,8 @@ class DockerPuller(object):
           Obtain the lines that contain the repo that will be pulled.
           From those lines, obtain the image ids.
           From this set of image ids, remove any repeated ids.
+          Additionally, remove any images from the set that are associated
+          with existing containers.
 
           If there are more unique image ids than the 'keep_images' limit,
           remove the first N images from unique_image_ids, where N is
@@ -151,29 +153,22 @@ class DockerPuller(object):
         lines = [line for line in lines if self.repo == line[0]]
         image_ids = [line[2] for line in lines]
         unique_image_ids = OrderedDict.fromkeys(image_ids).keys()
-        ordered_unique_image_ids = list(enumerate(unique_image_ids))
 
-        running_images = self._get_running_images()
-        running_unique_image_ids = list(
-            set(unique_image_ids) - set(running_images)
-        )
+        running_images = self._get_container_image_ids()
+        removable_image_ids = [image_id for image_id in unique_image_ids
+                               if image_id not in running_images]
 
-        reordered_uniques = []
-        for _, image_id in ordered_unique_image_ids:
-            if image_id in running_unique_image_ids:
-                reordered_uniques.append(image_id)
-
-        if len(reordered_uniques) > self.keep_images:
+        if len(removable_image_ids) > self.keep_images:
             for i in range(self.keep_images):
-                reordered_uniques.pop(0)
-            return reordered_uniques
+                removable_image_ids.pop(0)
+            return removable_image_ids
 
-    def _get_running_images(self, docker='docker'):
+    def _get_container_image_ids(self, docker='docker'):
         """
-        Return the image ids for currently running images.
+        Return the image ids for running and stopped containers.
         """
 
-        cmd = [self._docker(docker), 'ps']
+        cmd = [self._docker(docker), 'ps', '-a']
         rc, out, err = self._run(cmd)
 
         if rc is not None and rc != 0:
