@@ -216,38 +216,38 @@ def test_get_container_image_ids(docker_images2_text, docker_ps_text):
 
     module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
                            '6b76b45873ae')] = (
-        0, "c260c5345f656b271a2d587641d1bda95dc7599a83016d7249ff241ca4a8a8c8",
+        0, 'c260c5345f656b271a2d587641d1bda95dc7599a83016d7249ff241ca4a8a8c8',
         ''
     )
 
     module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
                            'c8b7beeebbf6')] = (
-        0, "6b4e8a7373fe8706183f15dc367564a723710f2214cab23d14d195d8abd8eccb",
+        0, '6b4e8a7373fe8706183f15dc367564a723710f2214cab23d14d195d8abd8eccb',
         ''
     )
 
     module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
                            '6b44562d0ff6')] = (
-        0, "6b4e8a7373fe8706183f15dc367564a723710f2214cab23d14d195d8abd8eccb",
+        0, '6b4e8a7373fe8706183f15dc367564a723710f2214cab23d14d195d8abd8eccb',
         ''
     )
 
     module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
                            'f71977673be2')] = (
-        0, "75af0ca1d93cad44e4d00ffa7d6c74862dc7f29bf1afda75f80edfc47a65633e",
+        0, '75af0ca1d93cad44e4d00ffa7d6c74862dc7f29bf1afda75f80edfc47a65633e',
         ''
     )
 
     module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
                            'e9082a00a862')] = (
-        0, "c260c5345f656b271a2d587641d1bda95dc7599a83016d7249ff241ca4a8a8c8",
+        0, 'c260c5345f656b271a2d587641d1bda95dc7599a83016d7249ff241ca4a8a8c8',
         ''
     )
 
     puller = DockerPuller(module)
 
     test = puller._get_container_image_ids()
-    expected = ["c260c5345f65", "6b4e8a7373fe", "75af0ca1d93c"]
+    expected = ['c260c5345f65', '6b4e8a7373fe', '75af0ca1d93c']
 
     assert test == expected
 
@@ -273,39 +273,39 @@ def test_image_ids_for_removal(docker_images2_text, docker_ps_text):
 
     module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
                            '6b76b45873ae')] = (
-        0, "c260c5345f656b271a2d587641d1bda95dc7599a83016d7249ff241ca4a8a8c8",
+        0, 'c260c5345f656b271a2d587641d1bda95dc7599a83016d7249ff241ca4a8a8c8',
         ''
     )
 
     module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
                            'c8b7beeebbf6')] = (
-        0, "6b4e8a7373fe8706183f15dc367564a723710f2214cab23d14d195d8abd8eccb",
+        0, '6b4e8a7373fe8706183f15dc367564a723710f2214cab23d14d195d8abd8eccb',
         ''
     )
 
     module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
                            '6b44562d0ff6')] = (
-        0, "6b4e8a7373fe8706183f15dc367564a723710f2214cab23d14d195d8abd8eccb",
+        0, '6b4e8a7373fe8706183f15dc367564a723710f2214cab23d14d195d8abd8eccb',
         ''
     )
 
     module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
                            'f71977673be2')] = (
-        0, "75af0ca1d93cad44e4d00ffa7d6c74862dc7f29bf1afda75f80edfc47a65633e",
+        0, '75af0ca1d93cad44e4d00ffa7d6c74862dc7f29bf1afda75f80edfc47a65633e',
         ''
     )
 
     module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
                            'e9082a00a862')] = (
-        0, "c260c5345f656b271a2d587641d1bda95dc7599a83016d7249ff241ca4a8a8c8",
+        0, 'c260c5345f656b271a2d587641d1bda95dc7599a83016d7249ff241ca4a8a8c8',
         ''
     )
 
     puller = DockerPuller(module)
 
     test = puller._image_ids_for_removal(docker_images2_text)
-    expected = ["f541aeac052e", "62f7406e8c04", "2e688289a160", "ea499d1d68b3",
-                "a6030cdaa9dc", "429efa892431", "08090e4e8c32", "52f0307b92f8",
-                "3d290a494333"]
+    expected = ['f541aeac052e', '62f7406e8c04', '2e688289a160', 'ea499d1d68b3',
+                'a6030cdaa9dc', '429efa892431', '08090e4e8c32', '52f0307b92f8',
+                '3d290a494333']
 
     assert test == expected
