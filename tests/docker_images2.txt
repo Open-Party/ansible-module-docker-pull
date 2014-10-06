@@ -1,0 +1,24 @@
+REPOSITORY          TAG                 IMAGE ID            CREATED             VIRTUAL SIZE
+redis               2.8.9               804b7a67efa7        43 hours ago        110.8 MB
+redis               2.8.8               736d7deb6ff0        43 hours ago        110.7 MB
+redis               2.8.7               f54acc89b332        43 hours ago        110.7 MB
+redis               2.8.6               f541aeac052e        43 hours ago        110.7 MB
+redis               latest              c260c5345f65        43 hours ago        110.8 MB
+redis               2.8                 c260c5345f65        43 hours ago        110.8 MB
+redis               2.8.17              c260c5345f65        43 hours ago        110.8 MB
+redis               2.8.16              62f7406e8c04        43 hours ago        110.8 MB
+redis               2.8.15              2e688289a160        43 hours ago        110.8 MB
+redis               2.8.14              ea499d1d68b3        43 hours ago        110.8 MB
+redis               2.8.13              a6030cdaa9dc        43 hours ago        110.8 MB
+redis               2.8.12              429efa892431        43 hours ago        110.7 MB
+redis               2.8.11              08090e4e8c32        43 hours ago        110.8 MB
+redis               2.8.10              52f0307b92f8        43 hours ago        110.8 MB
+redis               2.6                 3d290a494333        43 hours ago        110.5 MB
+redis               2.6.17              3d290a494333        43 hours ago        110.5 MB
+postgres            9                   75af0ca1d93c        44 hours ago        213.1 MB
+postgres            9.3                 75af0ca1d93c        44 hours ago        213.1 MB
+postgres            latest              75af0ca1d93c        44 hours ago        213.1 MB
+postgres            9.2                 75491cfd1235        44 hours ago        212.8 MB
+postgres            9.1                 156401cf89a1        44 hours ago        212.3 MB
+ubuntu              trusty              6b4e8a7373fe        45 hours ago        194.9 MB
+tutum/redis         latest              214f80f63b0f        2 weeks ago         196.4 MB

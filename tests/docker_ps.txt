@@ -1,0 +1,6 @@
+CONTAINER ID        IMAGE               COMMAND                CREATED             STATUS              PORTS               NAMES
+6b76b45873ae        redis:2.8           /entrypoint.sh redis   15 seconds ago      Up 14 seconds       6379/tcp            some-redis2         
+c8b7beeebbf6        ubuntu:latest       /bin/bash              40 seconds ago      Up 40 seconds                           ubuntu2             
+6b44562d0ff6        ubuntu:latest       /bin/bash              2 minutes ago       Up 2 minutes                            ubuntu              
+f71977673be2        postgres:9          /docker-entrypoint.s   9 minutes ago       Up 9 minutes        5432/tcp            some-postgres       
+e9082a00a862        redis:2.8           /entrypoint.sh redis   9 minutes ago       Up 9 minutes        6379/tcp            some-redis          
