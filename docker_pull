@@ -155,8 +155,9 @@ class DockerPuller(object):
         lines = [re.split('\s\s+', line) for line in lines]
         # docker ps columns:
         #     container id, image, command, created, status, ports, names
+        # Note: ports can be an empty column.
         image_ids = [self._get_container_image_id(line[0]) for line in lines
-                     if len(line) == 7]
+                     if len(line) == 7 or len(line) == 6]
         return OrderedDict.fromkeys(image_ids).keys()
 
     def _get_container_image_id(self, container_id):
