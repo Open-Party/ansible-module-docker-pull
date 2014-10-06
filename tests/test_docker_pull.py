@@ -26,6 +26,18 @@ def docker_images_text(here):
         return infile.read()
 
 
+@pytest.fixture
+def docker_images2_text(here):
+    with open(os.path.join(here, 'docker_images2.txt')) as infile:
+        return infile.read()
+
+
+@pytest.fixture
+def docker_ps_text(here):
+    with open(os.path.join(here, 'docker_ps.txt')) as infile:
+        return infile.read()
+
+
 class FakeAnsibleModule(object):
     check_mode = False
 
@@ -150,3 +162,150 @@ def test_tutum_pass(docker_images_text):
 
     test = puller._image_ids_for_removal(docker_images_text)
     assert test is None
+
+
+def test_get_container_image_id():
+    """
+    Testing method that obtains the image_id from a given container id.
+    """
+
+    from docker_ps_images2_map import containers
+    container_id = '6b76b45873ae'
+
+    module = FakeAnsibleModule()
+    module.params.update({
+        'repo': 'redis',
+        'tag': 'latest',
+        'keep_images': '3',
+    })
+
+    module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
+                           container_id)] = (
+        0, containers[container_id], ''
+    )
+
+    puller = DockerPuller(module)
+
+    test = puller._get_container_image_id(container_id)
+    assert test == containers[container_id][0:12]
+
+
+def test_get_container_image_ids(docker_images2_text, docker_ps_text):
+    """
+    Testing method that returns the unique set of image ids for existing
+    containers. These containers may be running or stopped.
+    """
+
+    module = FakeAnsibleModule()
+    module.params.update({
+        'repo': 'redis',
+        'tag': 'latest',
+        'keep_images': '3',
+    })
+
+    module.known_commands[('docker', 'images')] = (
+        0, docker_images2_text, ''
+    )
+
+    module.known_commands[('docker', 'ps', '-a')] = (
+        0, docker_ps_text, ''
+    )
+
+    # Don't know how to setup docker_ps_images2_map for this, so setting
+    # up the mapping between container ids and image ids explicitly here.
+
+    module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
+                           '6b76b45873ae')] = (
+        0, "c260c5345f656b271a2d587641d1bda95dc7599a83016d7249ff241ca4a8a8c8",
+        ''
+    )
+
+    module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
+                           'c8b7beeebbf6')] = (
+        0, "6b4e8a7373fe8706183f15dc367564a723710f2214cab23d14d195d8abd8eccb",
+        ''
+    )
+
+    module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
+                           '6b44562d0ff6')] = (
+        0, "6b4e8a7373fe8706183f15dc367564a723710f2214cab23d14d195d8abd8eccb",
+        ''
+    )
+
+    module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
+                           'f71977673be2')] = (
+        0, "75af0ca1d93cad44e4d00ffa7d6c74862dc7f29bf1afda75f80edfc47a65633e",
+        ''
+    )
+
+    module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
+                           'e9082a00a862')] = (
+        0, "c260c5345f656b271a2d587641d1bda95dc7599a83016d7249ff241ca4a8a8c8",
+        ''
+    )
+
+    puller = DockerPuller(module)
+
+    test = puller._get_container_image_ids()
+    expected = ["c260c5345f65", "6b4e8a7373fe", "75af0ca1d93c"]
+
+    assert test == expected
+
+
+def test_image_ids_for_removal(docker_images2_text, docker_ps_text):
+    """
+    Ensure the image for an existing redis container is not up for removal.
+    """
+
+    module = FakeAnsibleModule()
+    module.params.update({
+        'repo': 'redis',
+        'tag': 'latest',
+        'keep_images': '3',
+    })
+
+    module.known_commands[('docker', 'ps', '-a')] = (
+        0, docker_ps_text, ''
+    )
+
+    # Don't know how to setup docker_ps_images2_map for this, so setting
+    # up the mapping between container ids and image ids explicitly here.
+
+    module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
+                           '6b76b45873ae')] = (
+        0, "c260c5345f656b271a2d587641d1bda95dc7599a83016d7249ff241ca4a8a8c8",
+        ''
+    )
+
+    module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
+                           'c8b7beeebbf6')] = (
+        0, "6b4e8a7373fe8706183f15dc367564a723710f2214cab23d14d195d8abd8eccb",
+        ''
+    )
+
+    module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
+                           '6b44562d0ff6')] = (
+        0, "6b4e8a7373fe8706183f15dc367564a723710f2214cab23d14d195d8abd8eccb",
+        ''
+    )
+
+    module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
+                           'f71977673be2')] = (
+        0, "75af0ca1d93cad44e4d00ffa7d6c74862dc7f29bf1afda75f80edfc47a65633e",
+        ''
+    )
+
+    module.known_commands[('docker', 'inspect', '-f', '{{.Image}}',
+                           'e9082a00a862')] = (
+        0, "c260c5345f656b271a2d587641d1bda95dc7599a83016d7249ff241ca4a8a8c8",
+        ''
+    )
+
+    puller = DockerPuller(module)
+
+    test = puller._image_ids_for_removal(docker_images2_text)
+    expected = ["f541aeac052e", "62f7406e8c04", "2e688289a160", "ea499d1d68b3",
+                "a6030cdaa9dc", "429efa892431", "08090e4e8c32", "52f0307b92f8",
+                "3d290a494333"]
+
+    assert test == expected
